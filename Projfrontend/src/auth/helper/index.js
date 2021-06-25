@@ -1,4 +1,4 @@
-import { API } from "../../backend";
+import { API } from "../../core/backend";
 import { cartEmpty } from "../../core/helper/cartHelper";
 
 export const signup = (user) => {

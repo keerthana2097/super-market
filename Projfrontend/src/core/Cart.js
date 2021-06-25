@@ -2,10 +2,14 @@ import React, {useState, useEffect} from "react";
 import Base from "./Base";
 import Card from "./Card";
 import Footer from "./Footer";
+import CartTotal from "./CartTotal";
 
 import { Link } from "react-router-dom"; 
 import { loadCart } from "./helper/cartHelper";
-import PaymentB from "./PaymentB";
+
+import EmptyCart from "./EmptyCart";
+import CartColumns from "./CartColumns";
+import CardItem from "./CartItem";
 
 const Cart = () => {
   const [reload, setReload] = useState(false)
@@ -40,6 +44,8 @@ const loadCheckout = () => {
     );
 };
 return (
+  <section>
+  
     <div>
         <Base/>
         
@@ -54,54 +60,83 @@ return (
                                           <b class="line"/>
                         </div>
                     </div>
-                  <div class="tab-head">
-                          <div className="row">
-                            {products.map( (product, index) => {
-                               return (
-                                          <div key={index} className="col-3 mb-3">
-                                             <Card
-                                              key={index}
-                                               product={product}
-                                                removeFromCart={true}
-                                                addtoCart={false}
-                                                reload={reload}
-                                                setReload={setReload}
-                                                />
-                                                </div>
-                               );
-                            })}
-                            </div>
+
+                    <div>
+                    {products.length > 0 ?
+                    (
+                      <div className="container">
+
+                      
+                      <CartColumns />
+                      
+                      {
+                      products.map((product, index) => {
+                        return(
+                          
                         
+                        
+
+                          
+                            
+                          
+                          <div
+                          
+                          
+                           key={index}>
+                             
+                           <CardItem
+                           key={index}  
+                           product={product}
+                           removeFromCart={true}
+                           addtoCart={false}
+                           reload={reload}
+                           setReload={setReload}/>
+                        
+                           </div>
+                           
+                           
+
+                          );
+                          })
+                          
+                          }
+
+                   
+                        <br/>
+                        <br/>
+                        <CartTotal />
+                        </div>
+                   
+                         ):
+                          (
+                            <EmptyCart/>
+                            
+                             ) }
+                          
+
+                        
+                        </div>
+                        </div>
+                        </div>
+
+                        </section>
+                                                 
+                    
                                                 
-                            
-                            
-                                                     <div className="col-8">
-                                                        {products.length > 0 ? 
-                                                        (
-                                                          
-                                                        <PaymentB products={products} setReload={setReload} 
-                                                        />
-                                                          ) :
-                                                          (
-                                                                      <h3> Add something in cart</h3>
-                                                                              )}
-
-                                                      </div>
-                                                      
-
-                                                 </div>
-                                            </div>
+                                            
                             
                                
                                
-                            </div>
+ 
 );
+};
 
 
-<Footer/>
-                                                          };
                             
                    
+
+<Footer/>
+                                                          
 
 
 export default Cart;

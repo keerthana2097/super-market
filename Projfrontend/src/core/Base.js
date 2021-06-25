@@ -1,14 +1,13 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import NavBar from "./NavBar";
 
-import Menu from "./Menu";
 
 
 const Base = () => {
   return (
     <div>
 
-    <Menu/>
 
     <div className="header">
     <div className="container"></div>
@@ -24,6 +23,8 @@ const Base = () => {
         </Link>
       </h1>
     </div>
+
+    <NavBar/>
 
 
     <div className="header-ri">

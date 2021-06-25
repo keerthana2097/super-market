@@ -1,170 +1,125 @@
-import React, { useState, useEffect } from "react";
-import { Redirect } from "react-router-dom";
-import { cartEmpty } from "./helper/cartHelper";
-import { getmeToken, processPayment } from "./helper/paymentHelper";
-import { createOrder } from "./helper/orderHelper";
-import { isAuthenticated, signout } from "../auth/helper";
+import Axios from "axios";
+import React, { useState } from "react";
+import {server} from "../core/backend";
 
-import DropIn from "braintree-web-drop-in-react";
-import Footer from "./Footer";
+function PaymentB() {
+  const [name, setName] = useState("");
+  const [amount, setAmount] = useState("");
 
-const PaymentB = ({
-  products,
-  reload = undefined,
-  setReload = (f) => f,
-}) => {
-  const [info, setInfo] = useState({
-    loading: false,
-    success: false,
-    clientToken: null,
-    error: "",
-    instance: {},
-  });
+// this function will handel payment when user submit his/her money
+// and it will confim if payment is successfull or not
+  const handlePaymentSuccess = async (response) => {
+    try {
+      let bodyData = new FormData();
 
-  const userId = isAuthenticated && isAuthenticated().user.id;
-  const token = isAuthenticated && isAuthenticated().token;
+      // we will send the response we've got from razorpay to the backend to validate the payment
+      bodyData.append("response", JSON.stringify(response));
 
-  const getToken = (userId, token) => {
-    getmeToken(userId, token)
-      .then((info) => {
-        if (info.error) {
-          setInfo({
-            ...info,
-            error: info.error,
-          });
-          signout(() => {
-            return <Redirect to="/" />;
-          });
-        } else {
-          const clientToken = info.clientToken;
-          setInfo({ clientToken });
-        }
-      });
-  };
-
-  useEffect(() => {
-    getToken(userId, token);
-  }, []);
-
-  const getAmount = () => {
-    let amount = 0;
-    products.map((p) => {
-      amount = amount + parseInt(p.price);
-    });
-    return amount;
-  };
-  const onPurchase = () => {
-    setInfo({ loading: true });
-    let nonce;
-    let getNonce = info.instance.requestPaymentMethod().then((data) => {
-      console.log("MYDATA", data);
-      nonce = data.nonce;
-      const paymentData = {
-        paymentMethodNonce: nonce,
-        amount: getAmount(),
-      };
-      processPayment(userId, token, paymentData)
-        .then((response) => {
-          console.log("POINT-1", response);
-          if (response.error) {
-            if (response.code == "1") {
-              console.log("PAYMENT Failed!");
-              signout(() => {
-                return <Redirect to="/" />;
-              });
-            }
-          } else {
-            setInfo({ ...info, success: response.success, loading: false });
-            console.log("PAYMENT SUCCESS");
-
-            let product_names = "";
-            products.forEach(function (item) {
-              product_names += item.name + ", ";
-            });
-
-            const orderData = {
-              products: product_names,
-              transaction_id: response.transaction.id,
-              amount: response.transaction.amount,
-            };
-            createOrder(userId, token, orderData)
-              .then((response) => {
-                if (response.error) {
-                  if (response.code == "1") {
-                    console.log("Order Failed!");
-                    signout(() => {
-                      return <Redirect to="/" />;
-                    });
-                  }
-                } else {
-                  if (response.success == true) {
-                    console.log("ORDER PLACED!!");
-                  }
-                }
-              })
-              .catch((error) => {
-                setInfo({ loading: false, success: false });
-                console.log("Order FAILED", error);
-              });
-            cartEmpty(() => {
-              console.log("Did we got a crash?");
-            });
-
-            setReload(!reload);
-          }
+      await Axios({
+        url: `${server}/razorpay/payment/success/`,
+        method: "POST",
+        data: bodyData,
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      })
+        .then(() => {
+          console.log("Everything is OK!");
+          setName("");
+          setAmount("");
         })
-        .catch((error) => {
-          setInfo({ loading: false, success: false });
-          console.log("PAYMENT FAILED", error);
+        .catch((err) => {
+          console.log(err);
         });
-    });
+    } catch (error) {
+      console.log(console.error());
+    }
   };
 
-  const showbtnDropIn = () => {
-    return (
-      <div>
-        {info.clientToken !== null && products.length > 0
-          ? (
-            <div>
-              <DropIn
-                options={{ authorization: info.clientToken }}
-                onInstance={(instance) => (info.instance = instance)}
-              >
-              </DropIn>
-              <button
-                onClick={onPurchase}
-                className="btn btn-success"
-              >
-                Buy Now
-              </button>
-              
-            </div>
-          )
-          : (
-            <h3>Please login first or add something in cart</h3>
-          )}
-      </div>
-    );
+  // this will load a script tag which will open up Razorpay payment card to make //transactions
+  const loadScript = () => {
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    document.body.appendChild(script);
+  };
+
+  const showRazorpay = async () => {
+
+    let bodyData = new FormData();
+
+    // we will pass the amount and product name to the backend using form data
+    bodyData.append("amount", amount.toString());
+    bodyData.append("name", name);
+
+    const data = await Axios({
+      url: `${server}/razorpay/pay/`,
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      data: bodyData,
+    }).then((res) => {
+      return res;
+    });
+
+    // in data we will receive an object from the backend with the information about the payment
+    //that has been made by the user
+
+    var options = {
+      key_id: process.env.REACT_APP_PUBLIC_KEY, // in react your environment variable must start with REACT_APP_
+      key_secret: process.env.REACT_APP_SECRET_KEY,
+      amount: data.data.payment.amount,
+      currency: "INR",
+      name: "Org. Name",
+      description: "Test teansaction",
+      image: "", // add image url
+      order_id: data.data.payment.id,
+      handler: function (response) {
+        // we will handle success by calling handlePaymentSuccess method and
+        // will pass the response that we've got from razorpay
+        handlePaymentSuccess(response);
+      },
+      prefill: {
+        name: "User's name",
+        email: "User's email",
+        contact: "User's phone",
+      },
+      notes: {
+        address: "Razorpay Corporate Office",
+      },
+      theme: {
+        color: "#3399cc",
+      },
+    };
+
+    var rzp1 = new window.Razorpay(options);
+    rzp1.open();
   };
 
   return (
-    <div className="d-flex justify-content-center">
-    
-    <div className="card" >
-    <div>
-    <div class="spec ">
-      <h3>Your Bill is $ {getAmount()}</h3>
-      {showbtnDropIn()}
-      </div>
-    </div>
-    </div>
-    </div>
+    <div className="container" style={{ marginTop: "20vh" }}>
+      <form>
+        <h1>Payment page</h1>
 
-    
-
-    
+        
+        <div className="form-group">
+          <label htmlFor="exampleInputPassword1">Amount</label>
+          <input
+            type="text"
+            className="form-control"
+            id="amount"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+          />
+        </div>
+      </form>
+      <button onClick={showRazorpay} className="btn btn-primary btn-block">
+        Pay with razorpay
+      </button>
+    </div>
   );
-};
-
+}
 
 export default PaymentB;

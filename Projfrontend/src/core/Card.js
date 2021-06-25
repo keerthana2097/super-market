@@ -47,6 +47,7 @@ const Card = ({
       );
     };
 
+    
     const showRemoveFromCart = (removeFromCart) => {
       return(
         removeFromCart && (
@@ -69,9 +70,9 @@ const Card = ({
     
     return (
       <div>
-          <div className="card" style={{width:"15rem", height:"25rem"}}>
+          <div className="card" style={{width:"20rem", height:"30rem"}}>
 
-          <div className="women" >{cardTitle}</div>
+          <div className="spec" >{cardTitle}</div>
             {getAredirect(redirect)}
           <ImageHelper className="img-container"  product={product}/>
           
@@ -88,6 +89,7 @@ const Card = ({
                 {showAddToCart(addToCart)}
                 
               </div>
+            
               <div className="col-12">
               {showRemoveFromCart(removeFromCart)}
               </div>

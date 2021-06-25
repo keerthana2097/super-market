@@ -18,6 +18,13 @@ const Footer =()=> {
 					<li><a href="https://github.com/wondem12" class=" pin"><i class="fa fa-github" aria-hidden="true"></i></a></li>
 					<li><a href="https://www.instagram.com/samuel_wondem/" class=" dri"><i class="fa fa-instagram" aria-hidden="true"></i></a></li>
 				</ul>
+				<div class="col d-flex justify-content-center">
+				<button onClick={event => window.location.href='/About'} 
+                                    className="btn btn-warning" 
+                                    >
+                                       About Us
+                                </button>
+								</div>
 			</div>
             <div class="copy-right">
 			<p> &copy; 2019 Wondem store. All Rights Reserved | Design by  <a href="https://www.linkedin.com/in/samuel-wondem"> Samuel Wondem</a></p>

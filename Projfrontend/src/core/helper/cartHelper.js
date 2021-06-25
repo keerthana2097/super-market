@@ -39,6 +39,10 @@ export const removeItemFromCart = productId => {
   }
   return cart;
 };
+  
+  
+ 
+  
 
 export const cartEmpty = (next) => {
   if (typeof window !== undefined) {
